@@ -1,8 +1,24 @@
 # Git Mixin PoC
 
+Main idea: a SQLALchemy mixin that can track individual fields and turn them into git repos with simple advance forward, rewind back mechanisms.
+
+## Todos
+
+ - [x] commits implement semantic version and tag
+ - [x] commit message is used for DB field AND git commit
+ - [ ] WIP 5-3-21 PH: need a way to see which fields have changed in the SQL-Alchemy event hooks
+ - [ ] easy rollback to previous commit in both database and git
+ - [ ] backscrub a git repo and update the database
+
+## Current/More recent commits
+
+More recent commits will contain a shaped up version of the mixin as it comes closer to being a production usecase
+
+## Earlier commits
+
 This is some R&D I surfaced while working on making a git SQLAlchemy mixin. The concept being that the mixin would be plug & play and allow fields to be tracked individually in git.
 
-The problems encountered as of 4/30/21 with this after both R&D and speaking with others in the SQLAlchemy community on Gitter/matrix protocol was that there is currently no prehook to both process the child objects (models) from within the mixin, then add new fields to the mixin or model with dynamic names.
+~~The problems encountered as of 4/30/21 with this after both R&D and speaking with others in the SQLAlchemy community on Gitter/matrix protocol was that there is currently no prehook to both process the child objects (models) from within the mixin, then add new fields to the mixin or model with dynamic names.~~ I was able to successfully get this working (4/30/21).
 
 The result is that moving forward I am going to purely be using single fields, then serializing the current record for that table.
 

@@ -1,4 +1,4 @@
-import os
+
 import sys
 from sqlalchemy import Column, ForeignKey, Integer, String, event, create_engine
 from sqlalchemy.ext.declarative import declarative_base, declared_attr, DeclarativeMeta
@@ -17,26 +17,27 @@ class GitMixin(object):
     '''conducts version tracking per field
         1 DB field == 1 git repo
     '''
-    
-    @declared_attr
-    def git_commit_msg(cls):
-        if (hasattr(cls, "__trackedfields__")):
-            print('test')
-            trackedFields = cls.__trackedfields__
-            allCreatedFields = []
-            for field in trackedFields:
-                allCreatedFields.append(Column(field+"_commitmsg",String(250), nullable=True))
-                allCreatedFields.append(Column(field+"_tag",String(60), nullable=True))
-                allCreatedFields.append(Column(field+"_commit_hash",String(60), nullable=True))
-            return allCreatedFields
 
+    # below are all serialized strings
+    #git_commit_msg = Column(String(500))
+    #git_commit_hash = Column(String(500))
+    #git_commit_tag = Column(String(500))
+    
 
     def git_track_and_update( mappedClass, mapper, objInstance):
         if (hasattr(objInstance, "id") == False):
             raise Exception("This instance of an SQLAlchemy record does not have an ID and cannot be git tracked until it does.")
         for trackedField in objInstance.__trackedfields__:
-            gh = gitHandler(git_repo_name=objInstance.__tablename__+"_"+trackedField+"_"+objInstance.id)
-            gh.pack_string_into_file(filename=trackedField, filecontent=objInstance[trackedField])
+            print(trackedField)
+            print(objInstance)
+            print(dir(objInstance))
+            #print(objInstance[trackedField])
+            value = getattr(objInstance, trackedField, None)
+            print('inc val')
+            print(value)
+            print('end val')
+            gh = gitHandler(git_repo_name=objInstance.__tablename__+"_"+trackedField+"_"+str(objInstance.id))
+            gh.pack_string_into_file(filename=trackedField, filecontent=value)
             gh.stage_and_commit_all_changes(commitMsg="Test commit msg")
 
 
@@ -54,19 +55,41 @@ class GitMixin(object):
         
     @classmethod
     def __table_cls__(cls, name, metadata, *arg, **kw):
+
+        extrafields = []
+        allArgs = []
+        for item in arg:
+            allArgs.append(item)
+        if (hasattr(cls, "__trackedfields__")):
+            trackedFields = cls.__trackedfields__
+                #Column(field+"_commit_hash",String(60), nullable=True)
+            for field in trackedFields:
+                allArgs.append(Column(field+"_commitmsg",String(250), nullable=True))
+                allArgs.append(Column(field+"_tag",String(60), nullable=True))
+                allArgs.append(Column(field+"_commit_hash",String(60), nullable=True))
+                setattr(cls, field+"_commitmsg" ,Column(field+"_commitmsg",String(250), nullable=True))
+                setattr(cls, field+"_tag" ,Column(field+"_tag",String(60), nullable=True))
+                setattr(cls, field+"_commit_hash" , Column(field+"_commit_hash",String(60), nullable=True))
+
         fields = []
         for iterable in arg:
             fields.append(iterable.name)
         if 'id' not in fields:
             raise Exception('To use GitMixin with a table, there must be a field in the versioned table with label `id` ')
+
+        allArgs = tuple(allArgs)
         return Table(
             name,
-            metadata, *arg, **kw
+            metadata, *allArgs, **kw
         )
  
 
 # for testing purposes
 if __name__ == "__main__":
+    import time
+    import os
+    if (os.path.exists('sqlalchemy_example.db')):
+        os.remove('sqlalchemy_example.db')
     Base = declarative_base()
     class Person(Base, GitMixin):
         __tablename__ = 'person'
@@ -112,3 +135,9 @@ if __name__ == "__main__":
     newPerson = Person(name='test1234')
     session.add(newPerson)
     session.commit()
+    session.close()
+    print('removing database in 45s')
+    time.sleep(35) # give myself 35s to poke around at the db
+    print('removing database in 10s')
+    time.sleep(10)
+    os.remove('sqlalchemy_example.db')

@@ -32,6 +32,8 @@ class gitHandler:
             self.version_control_directory = str(Path.cwd()) + '/version_control'
             if (self.git_repo_path != None and os.path.exists(self.git_repo_path) == False):
                 os.mkdir(self.version_control_directory)
+        if (os.path.exists(self.version_control_directory) == False):
+            os.mkdir(self.version_control_directory)
         # Create full path to git repo
         if (self.git_repo_path == None):
             self.git_repo_path = self.version_control_directory + '/' + self.git_repo_name
@@ -68,13 +70,26 @@ class gitHandler:
         self.git_repo.index.add(files)
 
     def commit_new_changes(self, commitMsg:str ) -> str:
+        if commitMsg == None:
+            commitMsg = ''
         if len(commitMsg) > 120:
             raise Exception('commit message must be 120 characters or less')
         self.git_repo.index.commit(commitMsg)
-        return self.git_repo.head.object.hexsha
+        
 
-    def create_tag(self, tagname:str) -> None:
+    def create_tag(self, tagname:str) -> str:
+        #print('git repo describe')
+        #print(self.git_repo.head)
+        #print(self.git_repo.head.log)
+        #print(dir(self.git_repo.head))
+        #print(dir(self.git_repo))
+        #print(self.git_repo.tag(self.git_repo_path))
+        print(self.git_repo.tags)
         self.git_repo.create_tag(tagname)
+        return self.git_repo.tags[-1]
+
+    def get_current_git_tag(self) -> str:
+        return self.git_repo.tags[-1]
     
     def reset_head(self):
         self.git_repo.reset('--hard')
@@ -83,11 +98,17 @@ class gitHandler:
         changedFiles = self.check_for_untracked_changes()
         self.stage_new_changes(files=changedFiles)
         self.commit_new_changes(commitMsg)
+        
 
 
 
 
 if __name__ == "__main__":
+    import os
+    import shutil
+    if (os.path.exists('version_control') == True):
+        shutil.rmtree('version_control')
+        #os.rmdir('version_control')
     repo = Repo.init('./test')
     print(repo.untracked_files)
     gh = gitHandler(git_repo_name="testdb-table-field-1")
@@ -95,3 +116,4 @@ if __name__ == "__main__":
     print(changes)
     gitCommitHash = gh.stage_and_commit_all_changes('testing version control')
     print(gitCommitHash)
+    gh.create_tag('1.0.0')

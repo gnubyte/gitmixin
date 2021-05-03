@@ -1,9 +1,13 @@
-
+# std
 import sys
+
+# Frameworks
 from sqlalchemy import Column, ForeignKey, Integer, String, event, create_engine
 from sqlalchemy.ext.declarative import declarative_base, declared_attr, DeclarativeMeta
 from sqlalchemy.orm import declarative_mixin, relationship, sessionmaker
+from sqlalchemy.orm.attributes import get_history
 from sqlalchemy.schema import Table
+import semver
 
 # Custom Imports
 from gitsimply import gitHandler
@@ -24,22 +28,46 @@ class GitMixin(object):
     #git_commit_tag = Column(String(500))
     
 
+    def increment_tag(mappedClass, mapper, objInstance):
+        #print(get_history(objInstance, ''))
+        #if (hasattr(objInstance, "id") == False):
+        #    raise Exception("This instance of an SQLAlchemy record does not have an ID and cannot be git tracked until it does.")
+
+        # check if this is new change
+        # if new change, opt to increment the version number
+        # before we set a new tag
+        # post commit
+        for trackedField in objInstance.__trackedfields__:
+            print(get_history(objInstance, trackedField))
+
+
+        #    value = getattr(objInstance, trackedField, None)
+        #    git_commit_msg = getattr(objInstance, trackedField+"_commitmsg")
+        #    git_commit_tag = getattr(objInstance, trackedField+"_tag")
+        #    if (git_commit_tag == None or git_commit_tag == ''):
+        #        git_commit_tag = '1.0.0'
+        #    setattr(objInstance, trackedField+"_tag", )
+
+
     def git_track_and_update( mappedClass, mapper, objInstance):
+        print('check if fires off twice')
         if (hasattr(objInstance, "id") == False):
             raise Exception("This instance of an SQLAlchemy record does not have an ID and cannot be git tracked until it does.")
         for trackedField in objInstance.__trackedfields__:
-            print(trackedField)
-            print(objInstance)
-            print(dir(objInstance))
-            #print(objInstance[trackedField])
-            value = getattr(objInstance, trackedField, None)
-            print('inc val')
-            print(value)
-            print('end val')
+            value = getattr(objInstance, trackedField, None) # TODO: need a method here to fetch if this field has been modified
+            git_commit_msg = getattr(objInstance, trackedField+"_commitmsg")
+            git_commit_tag = getattr(objInstance, trackedField+"_tag")
+            if (git_commit_tag == None or git_commit_tag == ''):
+                git_commit_tag = '1.0.0'
+            else:
+                ver = semver.VersionInfo.parse(git_commit_tag)
+                ver.bump_major()
+                git_commit_tag = str(ver)
             gh = gitHandler(git_repo_name=objInstance.__tablename__+"_"+trackedField+"_"+str(objInstance.id))
             gh.pack_string_into_file(filename=trackedField, filecontent=value)
-            gh.stage_and_commit_all_changes(commitMsg="Test commit msg")
-
+            sha = gh.stage_and_commit_all_changes(commitMsg=git_commit_msg)
+            gh.create_tag(git_commit_tag)
+            
 
     @classmethod
     def __declare_first__(cls):
@@ -51,6 +79,7 @@ class GitMixin(object):
     def __declare_last__(cls):
         # get called after mappings are completed
         # http://docs.sqlalchemy.org/en/rel_0_7/orm/extensions/declarative.html#declare-last
+        event.listen(cls, 'before_insert', cls.increment_tag) # Initial git commit
         event.listen(cls, 'after_insert', cls.git_track_and_update) # Initial git commit
         
     @classmethod
@@ -90,14 +119,18 @@ if __name__ == "__main__":
     import os
     if (os.path.exists('sqlalchemy_example.db')):
         os.remove('sqlalchemy_example.db')
+        import shutil
+        shutil.rmtree('version_control')
     Base = declarative_base()
     class Person(Base, GitMixin):
         __tablename__ = 'person'
-        __trackedfields__ = ['name']
+        __trackedfields__ = ['name', 'lastname']
         # Here we define columns for the table person
         # Notice that each column is also a normal Python instance attribute.
         id = Column(Integer, primary_key=True)
         name = Column(String(250), nullable=False)
+        lastname = Column(String(250))
+        email = Column(String(250))
 
 
     class Address(Base):
@@ -135,7 +168,12 @@ if __name__ == "__main__":
     newPerson = Person(name='test1234')
     session.add(newPerson)
     session.commit()
-    session.close()
+    session.refresh(newPerson)
+    print('new persons commit ')
+    print(newPerson.name_commitmsg)
+    print(newPerson.name_tag)
+    print(newPerson.name_commit_hash)
+    #session.close()
     print('removing database in 45s')
     time.sleep(35) # give myself 35s to poke around at the db
     print('removing database in 10s')

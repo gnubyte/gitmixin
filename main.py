@@ -28,6 +28,15 @@ class GitMixin(object):
     #git_commit_tag = Column(String(500))
     
 
+    def __is_modified(mappedClass, mapper, objInstance, fieldname):
+        trackedfield = objInstance.__trackedfields__[fieldname]
+        history = get_history(objInstance, trackedfield)
+        if len(history.added) > 0:
+            return True
+        if len(history.deleted) > 0:
+            return True
+        return False        
+
     def increment_tag(mappedClass, mapper, objInstance):
         #print(get_history(objInstance, ''))
         #if (hasattr(objInstance, "id") == False):
@@ -38,7 +47,17 @@ class GitMixin(object):
         # before we set a new tag
         # post commit
         for trackedField in objInstance.__trackedfields__:
-            print(get_history(objInstance, trackedField))
+            history = get_history(objInstance, trackedField)
+            print(history)
+            print(dir(history))
+            print('history count: ' +str(history.count))
+            print('added:'+str(history.added))
+            print('added len:'+str(len(history.added)))
+            print('added type:'+str(type(history.added)))
+            print('deleted:'+ str(history.deleted))
+            print('deleted type:'+ str(type(history.deleted)))
+            print('empty:'+ str(history.empty))
+            print('empty type:'+ str(type(history.empty)))
 
 
         #    value = getattr(objInstance, trackedField, None)
@@ -72,6 +91,7 @@ class GitMixin(object):
     @classmethod
     def __declare_first__(cls):
         #print('declare first')
+        #event.listen(cls, 'before_insert', cls.increment_tag)
         pass
 
 
@@ -80,7 +100,7 @@ class GitMixin(object):
         # get called after mappings are completed
         # http://docs.sqlalchemy.org/en/rel_0_7/orm/extensions/declarative.html#declare-last
         event.listen(cls, 'before_insert', cls.increment_tag) # Initial git commit
-        event.listen(cls, 'after_insert', cls.git_track_and_update) # Initial git commit
+        #event.listen(cls, 'after_insert', cls.git_track_and_update) # Initial git commit
         
     @classmethod
     def __table_cls__(cls, name, metadata, *arg, **kw):
@@ -119,6 +139,7 @@ if __name__ == "__main__":
     import os
     if (os.path.exists('sqlalchemy_example.db')):
         os.remove('sqlalchemy_example.db')
+    if (os.path.exists('version_control')):
         import shutil
         shutil.rmtree('version_control')
     Base = declarative_base()
@@ -132,6 +153,13 @@ if __name__ == "__main__":
         lastname = Column(String(250))
         email = Column(String(250))
 
+        # {TABLENAME}-{FIELDNAME}-{ID}/ - filehere
+        #  Person-lastname-1                          / - 
+        #  Person-lastname-2                          / - 
+        #  Person-lastname-3                          / - 
+        #  Person-lastname-10                          / - 
+        #  Person-email-1                          / - 
+        #  Person-name-3                          / - 
 
     class Address(Base):
         __tablename__ = 'address'
@@ -144,6 +172,20 @@ if __name__ == "__main__":
         person_id = Column(Integer, ForeignKey('person.id'))
         person = relationship(Person)
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     # Create an engine that stores data in the local directory's
     # sqlalchemy_example.db file.
     engine = create_engine('sqlite:///sqlalchemy_example.db')
@@ -173,9 +215,17 @@ if __name__ == "__main__":
     print(newPerson.name_commitmsg)
     print(newPerson.name_tag)
     print(newPerson.name_commit_hash)
+    print('adding email')
+    newPerson.email = "patrick.hastings@verizon.com"
+    session.commit()
+    print('added email')
+    print('changing name...')
+    newPerson.name = 'updateFieldTest'
+    session.commit()
+    print('changed name...')
     #session.close()
-    print('removing database in 45s')
-    time.sleep(35) # give myself 35s to poke around at the db
+    print('removing database in 100s')
+    time.sleep(100) # give myself 35s to poke around at the db
     print('removing database in 10s')
     time.sleep(10)
     os.remove('sqlalchemy_example.db')

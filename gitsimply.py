@@ -92,7 +92,7 @@ class gitHandler:
 
     def get_current_git_tag(self) -> str:
         if len(self.git_repo.tags) == 0:
-            return None
+            return ''
         else:
             return self.git_repo.tags[-1]
     

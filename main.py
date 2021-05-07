@@ -19,6 +19,7 @@ def is_modified( objInstance, fieldname):
         if trackedfield == None:
             return False
         history = get_history(objInstance, fieldname)
+        print(history)
         if len(history.added) > 0:
             return True
         if len(history.deleted) > 0:
@@ -30,34 +31,32 @@ class GitMixin(object):
     '''conducts version tracking per field
         1 DB field == 1 git repo
     '''
-
-    # below are all serialized strings
-    #git_commit_msg = Column(String(500))
-    #git_commit_hash = Column(String(500))
-    #git_commit_tag = Column(String(500))
-    
-
             
 
     def increment_tag(mappedClass, mapper, objInstance):
         # WARNING: called before commit to modify the instances' current tag
-        #print(get_history(objInstance, ''))
-        #if (hasattr(objInstance, "id") == False):
-        #    raise Exception("This instance of an SQLAlchemy record does not have an ID and cannot be git tracked until it does.")
-
         # check if this is new change
         # if new change, opt to increment the version number
-        # before we set a new tag
-        # post commit
+        # before we set a new tag *ON THE OBJECT IN PREP FOR CHANGING TAG*
         for trackedField in objInstance.__trackedfields__:
             if (is_modified(objInstance=objInstance, fieldname=trackedField) == True):
                 gh = gitHandler(git_repo_name=objInstance.__tablename__+"_"+trackedField+"_"+str(objInstance.id))
-                value = getattr(objInstance, trackedField, None)
-                git_commit_msg = getattr(objInstance, trackedField+"_commitmsg")
                 git_commit_tag = getattr(objInstance, trackedField+"_tag")
                 current_tag = gh.get_current_git_tag()
-                if (current_tag != '1.0.0' and current_tag == None ):
+                print('current tag inside inc tag: ' + str(current_tag))
+                isThisNewRepo = False
+                if (str(current_tag) != '1.0.0' and str(current_tag) == '' ):
+                    # this is a brand new repo
                     git_commit_tag = '1.0.0'
+                    isThisNewRepo = True 
+                if (isThisNewRepo == False and git_commit_tag == '1.0.0'):
+                    print('fired off')
+                    ver = semver.VersionInfo.parse(git_commit_tag)
+                    print(ver)
+                    ver = ver.bump_major()
+                    git_commit_tag = str(ver)
+                    print('tag inside increment fire off: %s' % (git_commit_tag))
+                print('about to set objInstance with git commit tag...%s' % (git_commit_tag))
                 setattr(objInstance, str(trackedField)+"_tag", git_commit_tag )
 
 
@@ -81,6 +80,8 @@ class GitMixin(object):
                 gh.pack_string_into_file(filename=trackedField, filecontent=value)
                 sha = gh.stage_and_commit_all_changes(commitMsg=git_commit_msg)
                 if (str(current_tag) == git_commit_tag):
+                    print(current_tag)
+                    print(git_commit_tag)
                     # the repo is already reflecting the correct tag
                     pass
                 else:

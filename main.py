@@ -14,7 +14,16 @@ from gitsimply import gitHandler
 
 
 
-
+def is_modified( objInstance, fieldname):
+        trackedfield = getattr(objInstance, fieldname, None)
+        if trackedfield == None:
+            return False
+        history = get_history(objInstance, fieldname)
+        if len(history.added) > 0:
+            return True
+        if len(history.deleted) > 0:
+            return True
+        return False
 
 @declarative_mixin
 class GitMixin(object):
@@ -28,16 +37,10 @@ class GitMixin(object):
     #git_commit_tag = Column(String(500))
     
 
-    def __is_modified(mappedClass, mapper, objInstance, fieldname):
-        trackedfield = objInstance.__trackedfields__[fieldname]
-        history = get_history(objInstance, trackedfield)
-        if len(history.added) > 0:
-            return True
-        if len(history.deleted) > 0:
-            return True
-        return False        
+            
 
     def increment_tag(mappedClass, mapper, objInstance):
+        # WARNING: called before commit to modify the instances' current tag
         #print(get_history(objInstance, ''))
         #if (hasattr(objInstance, "id") == False):
         #    raise Exception("This instance of an SQLAlchemy record does not have an ID and cannot be git tracked until it does.")
@@ -47,60 +50,54 @@ class GitMixin(object):
         # before we set a new tag
         # post commit
         for trackedField in objInstance.__trackedfields__:
-            history = get_history(objInstance, trackedField)
-            print(history)
-            print(dir(history))
-            print('history count: ' +str(history.count))
-            print('added:'+str(history.added))
-            print('added len:'+str(len(history.added)))
-            print('added type:'+str(type(history.added)))
-            print('deleted:'+ str(history.deleted))
-            print('deleted type:'+ str(type(history.deleted)))
-            print('empty:'+ str(history.empty))
-            print('empty type:'+ str(type(history.empty)))
-
-
-        #    value = getattr(objInstance, trackedField, None)
-        #    git_commit_msg = getattr(objInstance, trackedField+"_commitmsg")
-        #    git_commit_tag = getattr(objInstance, trackedField+"_tag")
-        #    if (git_commit_tag == None or git_commit_tag == ''):
-        #        git_commit_tag = '1.0.0'
-        #    setattr(objInstance, trackedField+"_tag", )
+            if (is_modified(objInstance=objInstance, fieldname=trackedField) == True):
+                gh = gitHandler(git_repo_name=objInstance.__tablename__+"_"+trackedField+"_"+str(objInstance.id))
+                value = getattr(objInstance, trackedField, None)
+                git_commit_msg = getattr(objInstance, trackedField+"_commitmsg")
+                git_commit_tag = getattr(objInstance, trackedField+"_tag")
+                current_tag = gh.get_current_git_tag()
+                if (current_tag != '1.0.0' and current_tag == None ):
+                    git_commit_tag = '1.0.0'
+                setattr(objInstance, str(trackedField)+"_tag", git_commit_tag )
 
 
     def git_track_and_update( mappedClass, mapper, objInstance):
         print('check if fires off twice')
         if (hasattr(objInstance, "id") == False):
             raise Exception("This instance of an SQLAlchemy record does not have an ID and cannot be git tracked until it does.")
+        # ---
+        # Determine and 
         for trackedField in objInstance.__trackedfields__:
-            value = getattr(objInstance, trackedField, None) # TODO: need a method here to fetch if this field has been modified
-            git_commit_msg = getattr(objInstance, trackedField+"_commitmsg")
-            git_commit_tag = getattr(objInstance, trackedField+"_tag")
-            if (git_commit_tag == None or git_commit_tag == ''):
-                git_commit_tag = '1.0.0'
-            else:
-                ver = semver.VersionInfo.parse(git_commit_tag)
-                ver.bump_major()
-                git_commit_tag = str(ver)
-            gh = gitHandler(git_repo_name=objInstance.__tablename__+"_"+trackedField+"_"+str(objInstance.id))
-            gh.pack_string_into_file(filename=trackedField, filecontent=value)
-            sha = gh.stage_and_commit_all_changes(commitMsg=git_commit_msg)
-            gh.create_tag(git_commit_tag)
-            
-
-    @classmethod
-    def __declare_first__(cls):
-        #print('declare first')
-        #event.listen(cls, 'before_insert', cls.increment_tag)
-        pass
+            if (is_modified(objInstance, trackedField) == True):
+                value = getattr(objInstance, trackedField, None) # TODO: need a method here to fetch if this field has been modified
+                git_commit_msg = getattr(objInstance, trackedField+"_commitmsg")
+                git_commit_tag = getattr(objInstance, trackedField+"_tag")
+                print('current commit tag on object:' + git_commit_tag)
+                gh = gitHandler(git_repo_name=objInstance.__tablename__+"_"+trackedField+"_"+str(objInstance.id))
+                current_tag = gh.get_current_git_tag()
+                print('current tag on repo:' + str(current_tag))
+                #if ((git_commit_tag == None or git_commit_tag == '') and current_tag != '1.0.0' and current_tag == None):
+                #    git_commit_tag = '1.0.0'
+                gh.pack_string_into_file(filename=trackedField, filecontent=value)
+                sha = gh.stage_and_commit_all_changes(commitMsg=git_commit_msg)
+                if (str(current_tag) == git_commit_tag):
+                    # the repo is already reflecting the correct tag
+                    pass
+                else:
+                    # add the newest tag
+                    gh.create_tag(git_commit_tag)
 
 
     @classmethod
     def __declare_last__(cls):
         # get called after mappings are completed
         # http://docs.sqlalchemy.org/en/rel_0_7/orm/extensions/declarative.html#declare-last
-        event.listen(cls, 'before_insert', cls.increment_tag) # Initial git commit
-        #event.listen(cls, 'after_insert', cls.git_track_and_update) # Initial git commit
+        event.listen(cls, 'before_insert', cls.increment_tag) # CREATE # WARNING: has to run before commit to modify the tag data
+        event.listen(cls, 'after_insert', cls.git_track_and_update) # CREATE
+        event.listen(cls, 'before_update', cls.increment_tag) # UPDATE/DELETE
+        event.listen(cls, 'after_update', cls.git_track_and_update) # UPDATE/DELETE
+        event.listen(cls, 'before_delete', cls.increment_tag) # DELETE
+        event.listen(cls, 'after_delete', cls.git_track_and_update) # DELETE
         
     @classmethod
     def __table_cls__(cls, name, metadata, *arg, **kw):
@@ -207,7 +204,7 @@ if __name__ == "__main__":
     #event.listen(Session, "after_commit", GitMixin.after_commit) #TODO: let the mixin own this
     #event.listen(Session, "after_commit", GitMixin.after_commit)
 
-    newPerson = Person(name='test1234')
+    newPerson = Person(name='test1234', name_commitmsg="latest greatest")
     session.add(newPerson)
     session.commit()
     session.refresh(newPerson)

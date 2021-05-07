@@ -6,7 +6,10 @@ Main idea: a SQLALchemy mixin that can track individual fields and turn them int
 
  - [x] commits implement semantic version and tag
  - [x] commit message is used for DB field AND git commit
- - [ ] WIP 5-3-21 PH: need a way to see which fields have changed in the SQL-Alchemy event hooks
+ - [x] WIP 5-3-21 PH: need a way to see which fields have changed in the SQL-Alchemy event hooks
+ - [x] 5-7-21 PH: Add event hook that listens for updates to field/commits/deletes (inserts work atm)
+ - [x] 5-7-21 PH: Need to test event listener types
+ - [x] 5-7-21 PH:need a linear get current tag in git and if exists, leverage it
  - [ ] easy rollback to previous commit in both database and git
  - [ ] backscrub a git repo and update the database
 

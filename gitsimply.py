@@ -52,6 +52,8 @@ class gitHandler:
         '''Will write filecontent to the filename inside the repo    
         with the tuple(isNewFile=Boolean,isModified=Boolean)
         '''
+        if filecontent == None:
+            filecontent = ''
         #newFile  & modified is redundant but both are present for clear expression of meaning
         filepath = self.git_repo_path + "/"+filename
         if (os.path.exists(filepath) == False):
@@ -89,7 +91,10 @@ class gitHandler:
         return self.git_repo.tags[-1]
 
     def get_current_git_tag(self) -> str:
-        return self.git_repo.tags[-1]
+        if len(self.git_repo.tags) == 0:
+            return None
+        else:
+            return self.git_repo.tags[-1]
     
     def reset_head(self):
         self.git_repo.reset('--hard')

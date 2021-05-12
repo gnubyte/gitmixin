@@ -91,11 +91,18 @@ class gitHandler:
         return self.git_repo.tags[-1]
 
     def get_current_git_tag(self) -> str:
+        '''returns latest git tag'''
         if len(self.git_repo.tags) == 0:
-            return ''
+            return ""
         else:
-            return self.git_repo.tags[-1]
+            return str(self.git_repo.tags[-1])
     
+    def return_all_tags_and_commits(self) -> dict:
+        tagmap = {}
+        for t in repo.tags():
+            tagmap.setdefault(r.commit(t), []).append(t)
+        return tagmap
+
     def reset_head(self):
         self.git_repo.reset('--hard')
 
@@ -111,14 +118,44 @@ class gitHandler:
 if __name__ == "__main__":
     import os
     import shutil
+
+
+    # ----------CLEANUP---------
+    # if version control && test directories exist
+    # Clean them up for the next demo/test    
+
+    #  ----- Version Control
     if (os.path.exists('version_control') == True):
         shutil.rmtree('version_control')
-        #os.rmdir('version_control')
-    repo = Repo.init('./test')
+
+    #  ----- test directory
+    if (os.path.exists('test') == True):
+        shutil.rmtree('test')
+
+
+
+    # -----------------------------
+    # CREATE MOCK FILES
+    if (os.path.exists('working_test_demo') == False):
+        os.mkdir('test')
+        oneFile = open('working_test_demo/onefile.py', 'w')
+        oneFile.write('#this is a test comment \nprint("codehere") ')
+        oneFile.close()
+
+    # -----------------------------
+    #            TEST
+
+    # #------ Init the repo
+    repo = Repo.init('./working_test_demo')
     print(repo.untracked_files)
     gh = gitHandler(git_repo_name="testdb-table-field-1")
     changes = gh.check_for_untracked_changes()
     print(changes)
-    gitCommitHash = gh.stage_and_commit_all_changes('testing version control')
-    print(gitCommitHash)
-    gh.create_tag('1.0.0')
+
+
+    # #------ Check in the current 'new' files
+    # #------ add a tag
+    gh.stage_and_commit_all_changes('testing version control')
+    gh.create_tag(tagname='1.0.0')
+
+    # #---- Change the files 

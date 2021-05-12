@@ -2,6 +2,12 @@
 
 Main idea: a SQLALchemy mixin that can track individual fields and turn them into git repos with simple advance forward, rewind back mechanisms.
 
+
+## Testing
+
+Finally wrote tests because the inline code when directly executing libs was getting out of hand and mucking up my commits.
+
+
 ## Todos
 
  - [x] commits implement semantic version and tag
@@ -10,8 +16,39 @@ Main idea: a SQLALchemy mixin that can track individual fields and turn them int
  - [x] 5-7-21 PH: Add event hook that listens for updates to field/commits/deletes (inserts work atm)
  - [x] 5-7-21 PH: Need to test event listener types
  - [x] 5-7-21 PH:need a linear get current tag in git and if exists, leverage it
+ - [ ] 5-10-21 PH: need a method to list an ordered dict or an ordered list of events
  - [ ] easy rollback to previous commit in both database and git
  - [ ] backscrub a git repo and update the database
+
+
+### 5-10-21 notes regarding tags API exposure
+
+
+ - [annotated tags are interesting here](https://git-scm.com/book/en/v2/Git-Basics-Tagging)
+ - [checking out a specific tag](https://stackoverflow.com/questions/20073873/ - how-to-checkout-a-tag-with-gitpython)
+ - [get tags paired up with the commits,](https://stackoverflow.com/questions/34932306/get-tags-of-a-commit) may have to pair this up & iterate back thru the commit hashes their paired off with to retrieve the commit msgs
+ - [notice the remote origin push here as well](https://stackoverflow.com/questions/35845733/gitpython-create-and-push-tags)
+ - [It looks like we can annotate the tags here](https://gitpython.readthedocs.io/en/stable/tutorial.html?highlight=create_tag)
+
+
+datastructure should look something like this.
+
+```
+ { 'tag1.4': {
+            'commit_hash': j,
+            'branch': k,
+            'current_branch': l, #ACTIVE BRANCH
+            'current_commit': m, #ACTIVE COMMIT
+            'commit_message': x,
+            'author': y,
+            'date': z
+            }
+  
+ } 
+```
+
+A few other ideas:
+ - use annotated tags (supports author, date, etc sort of metadata)
 
 ## Current/More recent commits
 

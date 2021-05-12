@@ -10,7 +10,7 @@ from sqlalchemy.schema import Table
 import semver
 
 # Custom Imports
-from gitsimply import gitHandler
+from . import gitHandler
 
 
 

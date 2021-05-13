@@ -5,7 +5,7 @@
 # Unit test overhead
 import unittest
 import time
-from ... import gitHandler
+from gitmixin import gitHandler
 
 # directory manipulation imports
 import os
@@ -69,6 +69,31 @@ class gitsimplyTest(unittest.TestCase):
         self.focused_repo.create_tag('1.0.0')
         currtag = self.focused_repo.get_current_git_tag()
         self.assertEqual('1.0.0', currtag)
+
+
+    def test_get_all_tags(self):
+        filenameForTesting='fieldname.txt'
+        results = self.focused_repo.pack_string_into_file(filename=filenameForTesting, filecontent='#initial file contents\n#some arbitrary string')
+        self.focused_repo.stage_and_commit_all_changes('test version control')
+        self.focused_repo.create_tag('1.0.0')
+        currtag = self.focused_repo.get_current_git_tag()
+        results = self.focused_repo.pack_string_into_file(filename=filenameForTesting, filecontent='even newer changes, version 2~!!!!')
+        self.focused_repo.stage_and_commit_all_changes('version control tag 2')
+        self.focused_repo.create_tag('2.0.0')
+        commits = self.focused_repo.return_all_tags_and_commits()
+        print(commits)
+        #for tag, commit in commits.items():
+        #    print(tag)
+        #    print(commit.get("author"))
+        #    print(commit.get("committed_datetime"))
+        #    print(commit.get("author_tz_offset_committed_datetime"))
+        #    print(commit.get("message"))
+        #    print(commit.get("size"))
+        self.assertEqual('test version control', commits.get('1.0.0').get('message'))
+        self.assertEqual('version control tag 2', commits.get('2.0.0').get('message'))
+        filecontents = self.focused_repo.retrieve_file_contents_by_commit(filename=filenameForTesting, hexsha=commits.get('1.0.0').get('hexsha'))
+        print(filecontents)
+        #time.sleep(300)
 
 
 

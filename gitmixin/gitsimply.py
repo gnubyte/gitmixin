@@ -1,7 +1,7 @@
 from git import Repo
 from pathlib import Path
 import os
-
+import io
 
 
 # TODO:
@@ -99,9 +99,35 @@ class gitHandler:
     
     def return_all_tags_and_commits(self) -> dict:
         tagmap = {}
-        for t in repo.tags():
-            tagmap.setdefault(r.commit(t), []).append(t)
+        for t in self.git_repo.tags:
+            hexsha = str(self.git_repo.commit(t))
+            tag = str(t)
+            commitObj = self.get_commit_by_sha(hexsha)
+            tagmap[tag] = {'hexsha': hexsha,
+                           'author': str(commitObj.author),
+                           'committed_datetime': commitObj.committed_datetime,
+                           'author_tz_offset_committed_datetime': commitObj.author_tz_offset,
+                           'message':str(commitObj.message),
+                           'size': str(commitObj.size)+'b',
+                            }
+            
         return tagmap
+
+    def get_commit_by_sha(self, sha:str):
+        for commit in self.git_repo.iter_commits():
+            if (commit.hexsha == sha):
+                #print(dir(commit))
+                return commit
+        return None
+     
+    def retrieve_file_contents_by_commit(self, filename, hexsha):
+        '''pop in the hexsha of the commit to view the file contents at that commit'''
+        commit = self.git_repo.commit(hexsha)
+        targetfile = commit.tree / filename
+        filecontentsraw = io.BytesIO(targetfile.data_stream.read())
+        filecontents = filecontentsraw.read().decode('utf-8')
+        return filecontents
+            
 
     def reset_head(self):
         self.git_repo.reset('--hard')

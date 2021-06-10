@@ -10,9 +10,11 @@ from sqlalchemy.schema import Table
 import semver
 
 # Custom Imports
+# commented out for inline debugging....
+#from gitsimply import gitHandler # testing
+
+# prod
 from . import gitHandler
-
-
 
 def is_modified( objInstance, fieldname):
         trackedfield = getattr(objInstance, fieldname, None)
@@ -31,7 +33,22 @@ class GitMixin(object):
     '''conducts version tracking per field
         1 DB field == 1 git repo
     '''
-            
+
+    @classmethod
+    def return_all_tags_and_commits(cls, fieldname, id):
+        #print('TABLE NAME CONCEPT:' + cls.__tablename__+"_"+fieldname+"_"+str(id))
+        gh = gitHandler(git_repo_name=cls.__tablename__+"_"+fieldname+"_"+str(id))
+        tagmap = gh.return_all_tags_and_commits()
+        return tagmap  
+
+    @classmethod
+    def return_file_by_commit(cls,fieldname,id, hex):
+        # fieldname = database field, ends up being the filename from our earlier writes
+        # id = DB record ID
+        # hex = git commit hash that will essentially do the lookup for the file
+        gh = gitHandler(git_repo_name=cls.__tablename__+"_"+fieldname+"_"+str(id))
+        filecontents = gh.retrieve_file_contents_by_commit(filename=fieldname, hexsha=hex)
+        return filecontents
 
     def increment_tag(mappedClass, mapper, objInstance):
         # WARNING: called before commit to modify the instances' current tag
@@ -222,6 +239,11 @@ if __name__ == "__main__":
     session.commit()
     print('changed name...')
     #session.close()
+    tagmap = newPerson.return_all_tags_and_commits('name', str(newPerson.id))
+    print(tagmap)
+    for k, v in tagmap.items():
+        print(k)
+        print(v)
     print('removing database in 100s')
     time.sleep(100) # give myself 35s to poke around at the db
     print('removing database in 10s')

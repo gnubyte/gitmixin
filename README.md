@@ -2,6 +2,7 @@
 
 Main idea: a SQLALchemy mixin that can track individual fields and turn them into git repos with simple advance forward, rewind back mechanisms.
 
+[Git Repo](https://gitlab.verizon.com/hastpa6/gitmixin)
 
 ## Testing
 
@@ -16,12 +17,18 @@ Finally wrote tests because the inline code when directly executing libs was get
  - [x] 5-7-21 PH: Add event hook that listens for updates to field/commits/deletes (inserts work atm)
  - [x] 5-7-21 PH: Need to test event listener types
  - [x] 5-7-21 PH:need a linear get current tag in git and if exists, leverage it
- - [ ] 5-10-21 PH: need a method to list an ordered dict or an ordered list of events
+ - [x] 5-10-21 PH: need a method to list an ordered dict or an ordered list of tags w commits
+ - [ ] 5-13-2021 PH: need a way to roll back to previous commits
+ - [ ] 5-13-2021 PH: a method that returns an easy overall status
+ - [ ] 5-13-2021 PH: a method that returns all branches, commits, commit messages
+ - [ ] 5-13-2021 PH: a merge request system
  - [ ] easy rollback to previous commit in both database and git
  - [ ] backscrub a git repo and update the database
-
+ - [ ] 5-14-2021 PH: add support for taking a dictionary type, serializing it, then deserializing on retrieval
 
 ### 5-10-21 notes regarding tags API exposure
+
+5-13-2021 PH: this is all set, minus the current branch part and is verbatim what you're seeing below.
 
 
  - [annotated tags are interesting here](https://git-scm.com/book/en/v2/Git-Basics-Tagging)

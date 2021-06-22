@@ -1,18 +1,18 @@
-.. include misc.MD
+.. include gettingstarted.md
 
 .. Gitmixin documentation master file, created by
-   sphinx-quickstart on Tue Jun 22 00:34:19 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+   
 
 Welcome to Gitmixin's documentation!
 ====================================
 
+Gitmixin is an SQLAlchemy mixin that allows for rows to be git-backed for the purpose of version control on a text field.
+
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-   misc
-
+   
 
 
 Indices and tables
@@ -21,3 +21,9 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+* :ref:`gettingstarted`
+
+
+
+
+

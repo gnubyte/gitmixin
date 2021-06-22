@@ -14,6 +14,10 @@ setuptools.setup(
     url="https://github.com/gnubyte/gitmixin",
     project_urls={
         "Bug Tracker": "https://github.com/gnubyte/gitmixin/issues",
+        'Repo': 'https://github.com/gnubyte/gitmixin',
+        'Documentation': 'https://gitmixin.readthedocs.io/en/latest/start.html'
+
+
     },
     classifiers=[
         "Programming Language :: Python :: 3",

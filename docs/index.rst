@@ -1,4 +1,4 @@
-.. include gettingstarted.md
+.. include start.md
 
 .. Gitmixin documentation master file, created by
    
@@ -10,9 +10,9 @@ Gitmixin is an SQLAlchemy mixin that allows for rows to be git-backed for the pu
 
 
 .. toctree::
+   start.md
    :maxdepth: 2
    :caption: Contents:
-   gettingstarted.md
    
 
 

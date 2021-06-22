@@ -1,5 +1,6 @@
 .. include start.md
 .. include usinglib.md
+.. include buildsteps.md
 
 .. Gitmixin documentation master file, created by
    

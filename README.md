@@ -9,6 +9,8 @@ An SQLALchemy mixin that can track individual fields and turn them into git repo
 
 ## Docs
 
+Documentation on how to use the project as well as development for it can be found here. Check the projects section on Github speciifcally for the roadmap.
+
 [Checkout our read the docs!](https://gitmixin.readthedocs.io/en/latest/?)
 
 ## Testing

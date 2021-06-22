@@ -66,6 +66,17 @@ Our tag would automatically become `2.0` for this post, and the commit message f
 
 
 
+## Must have Requirements
+
+It stands to reason the system must have these requirements to use this library as of GitMixin v0.1.0:
+ - python 3.x and up
+ - Git installed on the OS or environment
+ - **WARNING:** the field you are tracking at this time must be a string
+ - **WARNING:** the model you have must have a field linearly called 'id' at this time (gitmixin 0.1.0)
+
+
+
+
 ## Adding Gitmixin to your project
 
 SQLALchemy projects typically have a database defined in models. In your models.py file or equivalent, import GitMixin near the top of the file.

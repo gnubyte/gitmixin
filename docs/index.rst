@@ -12,6 +12,7 @@ Gitmixin is an SQLAlchemy mixin that allows for rows to be git-backed for the pu
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   gettingstarted.md
    
 
 

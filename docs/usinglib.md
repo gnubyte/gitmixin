@@ -1,4 +1,4 @@
-# Using the GitMixin Library
+# Using the Librarys methods
 
 This is an elaboration on how to use the library once it has been added to your project. See the getting started section for how to add GitMixin to your project.
 

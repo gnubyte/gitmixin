@@ -1,4 +1,5 @@
 .. include start.md
+.. include usinglib.md
 
 .. Gitmixin documentation master file, created by
    

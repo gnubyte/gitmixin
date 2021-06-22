@@ -1,4 +1,4 @@
-# Getting started with GitMixin
+# Getting Started
 
 A quick guide to using gitmixin
 

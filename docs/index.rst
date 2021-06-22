@@ -15,16 +15,3 @@ Gitmixin is an SQLAlchemy mixin that allows for rows to be git-backed for the pu
    :caption: Contents:
    
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-* :ref:`gettingstarted`
-
-
-
-
-

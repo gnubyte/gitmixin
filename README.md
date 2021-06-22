@@ -46,7 +46,7 @@ Then, in your SQLAlchemy class, inherit the GitMixin we just imported to give th
 `class Notes(Base, GitMixin):`
 
 
-Finally in the model, add a new private attrbiute trackedfields, and let it equal a list of strings that you intend to track. The strings inside this list should be names of fields you want to track.
+Finally in the model, add a new private attribute trackedfields, and let it equal a list of strings that you intend to track. The strings inside this list should be names of fields you want to track.
 
 ```
 class Notes(Base, GitMixin):
